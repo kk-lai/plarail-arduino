@@ -6,17 +6,19 @@
 
 #define COM1 Serial
 #define COM2 btSerial
-#define COM COM1
-
+#define COM COM2
+#define RX_BUFFER_LEN 32
 SoftwareSerial btSerial(btTX, btRX);
-char cmd[32];
+
+
+char cmd[RX_BUFFER_LEN];
 int rxIdx = 0;
 int trainSpeed = 0;
 
 const char STX[] = "STX ";
 const int stxSize = sizeof(STX)-1;
-const char ETX = '\n';
-const int trainSpeeds[] = { 0, 160,180,200,220 };
+const char ETX = '\r';
+const int trainSpeeds[] = { 0, 140,150,160,170 };
 const int trainSpeedsSize = sizeof(trainSpeeds)/sizeof(int);
 const char minSpeed = '0';
 const char maxSpeed = '0'+trainSpeedsSize-1;
@@ -36,6 +38,9 @@ void receiveCmd()
   l = COM.available();
   while (l>0) {
     b = COM.read();
+    /*Serial.print(b, DEC);
+    Serial.print(",");
+    Serial.println(rxIdx,DEC);*/
     if (rxIdx >= stxSize) {
       if (b==ETX) {
         cmd[rxIdx-stxSize]=0;
@@ -44,6 +49,9 @@ void receiveCmd()
       } else {
         cmd[rxIdx-stxSize]=b;
         rxIdx++;  
+        if (rxIdx-stxSize==RX_BUFFER_LEN) {
+          rxIdx=0;
+        }
       }      
     } else {
       if (b==STX[rxIdx]) {
